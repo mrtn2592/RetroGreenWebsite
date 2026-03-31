@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroLink IT Support - Terminal v1.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* --- VARIABLES GLOBALES --- */
+        :root {
+            --color-bg: #111;
+            --color-screen-off: #0a140a;
+            --color-green-dark: #0f380f;
+            --color-green-med: #306230;
+            --color-green-light: #8bac0f;
+            --color-green-bright: #9bbc0f;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-pixel: 'VT323', monospace;
+        }
+
+        /* --- CONFIGURATION DE BASE ET RESET --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-green-med) var(--color-bg);
+        }
+
+        html, body {
+            height: 100%;
+            background-color: var(--color-bg);
+            color: var(--color-green-bright);
+            font-family: var(--font-mono);
+            overflow-x: hidden;
+        }
+
+        /* --- EFFETS CRT / ÉCRAN LUMINOPHORE --- */
+        /* Conteneur principal qui simule l'écran physique */
+        .crt-container {
+            position: relative;
+            min-height: 100vh;
+            background-color: var(--color-screen-off);
+            /* Lueur externe du texte pour l'effet phosphore */
+            text-shadow: 0 0 3px var(--color-green-light), 0 0 8px var(--color-green-med);
+            /* Effet de scintillement global */
+            animation: flicker 0.15s infinite;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Couche 1: Scanlines (lignes horizontales) */
+        .crt-container::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 100;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Couche 2: Vignette et courbure de l'écran */
+        .crt-container::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
+            border-radius: 20px; /* Légère courbure des coins */
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            z-index: 101;
+            pointer-events: none;
+        }
+
+        /* Animation du scintillement */
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            50% { opacity: 0.95; }
+            100% { opacity: 1; }
+        }
+
+        /* Animation du curseur clignotant */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+            font-weight: bold;
+        }
+
+        /* --- UI & TYPOGRAPHIE --- */
+        h1, h2, h3 {
+            font-family: var(--font-pixel);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h1 { font-size: 3rem; margin-bottom: 1rem; }
+        h2 { font-size: 2rem; border-bottom: 2px solid var(--color-green-med); padding-bottom: 0.5rem; margin: 2rem 0 1.5rem; }
+        p { margin-bottom: 1.2rem; line-height: 1.4; font-size: 1.1rem; }
+        a { color: var(--color-green-bright); text-decoration: none; border-bottom: 1px dashed var(--color-green-med); transition: all 0.3s; }
+        a:hover { background-color: var(--color-green-dark); color: #fff; text-shadow: 0 0 10px var(--color-green-bright); }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10; /* Au-dessus des effets CRT */
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            border: 2px solid var(--color-green-med);
+            padding: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .system-status { font-size: 0.9rem; color: var(--color-green-light); }
+        .status-ok { color: var(--color-green-bright); font-weight: bold; }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li a {
+            font-family: var(--font-pixel);
+            font-size: 1.3rem;
+            border: 1px solid var(--color-green-med);
+            padding: 5px 15px;
+            text-transform: uppercase;
+        }
+        nav ul li a:hover {
+            background-color: var(--color-green-bright);
+            color: var(--color-bg);
+            text-shadow: none;
+        }
+
+        /* --- SECTIONS --- */
+        section {
+            margin-bottom: 50px;
+            padding: 20px;
+            border-left: 3px dotted var(--color-green-med);
+        }
+
+        /* Hero Section */
+        #hero {
+            text-align: center;
+            padding: 50px 0;
+            border: none;
+        }
+        .hero-box {
+            border: 4px double var(--color-green-bright);
+            padding: 30px;
+            display: inline-block;
+        }
+
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .service-item {
+            border: 2px solid var(--color-green-med);
+            padding: 15px;
+        }
+        .service-icon { font-family: var(--font-pixel); font-size: 3rem; display: block; margin-bottom: 10px; }
+
+        /* Contact Form (Simulation Terminal) */
+        .terminal-input-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: baseline;
+        }
+        .prompt { margin-right: 10px; font-weight: bold; color: var(--color-green-light); }
+        .terminal-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--color-green-med);
+            color: var(--color-green-bright);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            flex-grow: 1;
+            padding: 5px;
+            outline: none;
+            text-shadow: inherit;
+        }
+        .terminal-input:focus { border-bottom-color: var(--color-green-bright); }
+        .terminal-btn {
+            background: var(--color-green-dark);
+            border: 2px solid var(--color-green-bright);
+            color: var(--color-green-bright);
+            padding: 10px 30px;
+            font-family: var(--font-pixel);
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-shadow: inherit;
+            transition: 0.2s;
+        }
+        .terminal-btn:hover { background: var(--color-green-bright); color: var(--color-bg); }
+
+        /* Footer */
+        footer { text-align: center; margin-top: 50px; font-size: 0.8rem; color: var(--color-green-med); }
+
+        /* Boot overlay */
+        #boot-sequence {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--color-screen-off); z-index: 999;
+            padding: 20px;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            header { flex-direction: column; text-align: center; gap: 15px; }
+            nav ul { flex-direction: column; width: 100%; }
+            nav ul li a { display: block; width: 100%; }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="boot-sequence" class="crt-container">
+        <p>INITIALISING BIOS...</p>
+        <p>CHECKING MEMORY: 640K OK</p>
+        <p>LOADING RETRO-OS KERNEL...</p>
+        <p>MOUNTING DRIVES... C:\ [OK]</p>
+        <p>CONNECTING TO HOST...</p>
+        <p>ESTABLISHING SECURE LINK... <span class="cursor-blink">_</span></p>
+    </div>
+
+    <div class="crt-container">
+        <div class="container">
+
+            <header>
+                <div>
+                    <h1 style="margin: 0;">RETROLINK SYSTEMS</h1>
+                    <div class="system-status">
+                        [SYSTÈME: EN LIGNE] [TERMINAL ID: 0X4F2] [<span class="status-ok">CONNEXION STABLE</span>]
+                    </div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#hero">ACCUEIL</a></li>
+                        <li><a href="#services">SERVICES</a></li>
+                        <li><a href="#about">À PROPOS</a></li>
+                        <li><a href="#contact">CONTACT</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <main>
+                <section id="hero">
+                    <div class="hero-box">
+                        <h2>> <span id="typewriter-text"></span><span class="cursor-blink">_</span></h2>
+                        <p>VOTRE PARTENAIRE DE CONFIANCE POUR LE SUPPORT INFORMATIQUE DANS LES TERRES DÉSOLÉES DU NUMÉRIQUE.</p>
+                    </div>
+                </section>
+
+                <section id="services">
+                    <h2>/// NOS PROTOCOLES D'INTERVENTION</h2>
+                    <div class="services-grid">
+                        <div class="service-item">
+                            <span class="service-icon">[REPAIR]</span>
+                            <h3>DÉPANNAGE MATÉRIEL</h3>
+                            <p>Réparation de terminaux défectueux, remplacement de tubes cathodiques et soudure de composants critiques.</p>
+                        </div>
+                        <div class="service-item">
+                            <span class="service-icon">[NETWORK]</span>
+                            <h3>ADMINISTRATION RÉSEAU</h3>
+                            <p>Configuration de réseaux locaux sécurisés et maintenance des liaisons de données longue distance.</p>
+                        </div>
+                        <div class="service-item">
+                            <span class="service-icon">[RECOVER]</span>
+                            <h3>RÉCUPÉRATION DE DONNÉES</h3>
+                            <p>Extraction de données corrompues sur disques durs endommagés ou holobandes magnétiques.</p>
+                        </div>
+                        <div class="service-item">
+                            <span class="service-icon">[DEBUG]</span>
+                            <h3>ÉRADICATION DE VIRUS</h3>
+                            <p>Purge des logiciels malveillants, trojans et autres anomalies du système.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="about">
+                    <h2>/// FICHIER JOURNAL: QUI SOMMES-NOUS ?</h2>
+                    <p>>> ENTRÉE: Depuis l'an 2077, RetroLink Systems assure la survie technologique des abris et des communautés de surface. Nous croyons que le vieux matériel est le seul matériel fiable.</p>
+                    <p>>> Nos techniciens sont formés aux protocoles anciens et maîtrisent l'art perdu de la réparation au fer à souder. Pas de cloud, pas de mises à jour automatiques intrusives. Juste du code pur et du métal froid.</p>
+                    <p>>> NOTRE DEVISE: "Si ça ne fait pas de bruit quand ça démarre, c'est que c'est cassé."</p>
+                </section>
+
+                <section id="contact">
+                    <h2>/// ÉTABLIR UNE COMMUNICATION</h2>
+                    <p>Utilisez le formulaire ci-dessous pour envoyer une requête prioritaire à notre centre de commande.</p>
+
+                    <form onsubmit="event.preventDefault(); alert('>> TRANSMISSION ENVOYÉE. EN ATTENTE DE RÉPONSE...');">
+                        <div class="terminal-input-group">
+                            <label for="name" class="prompt">C:\USER\NOM></label>
+                            <input type="text" id="name" class="terminal-input" autocomplete="off" required>
+                        </div>
+                        <div class="terminal-input-group">
+                            <label for="email" class="prompt">C:\USER\EMAIL></label>
+                            <input type="email" id="email" class="terminal-input" autocomplete="off" required>
+                        </div>
+                        <div class="terminal-input-group">
+                            <label for="message" class="prompt">C:\MESSAGE\DATA></label>
+                            <input type="text" id="message" class="terminal-input" autocomplete="off" placeholder="Décrivez votre problème..." required>
+                        </div>
+                        <div style="margin-top: 30px; text-align: right;">
+                           <button type="submit" class="terminal-btn">[ EXÉCUTER TRANSMISSION ]</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+
+            <footer>
+                <p>© 2077-2024 RETROLINK SYSTEMS. TOUS DROITS RÉSERVÉS PAR VAULT-TEC (SOUS LICENCE).</p>
+                <p>FIN DE TRANSMISSION.</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        // Effet de machine à écrire pour le Hero
+        const textElement = document.getElementById('typewriter-text');
+        const textToType = "BIENVENUE SUR LE TERMINAL D'ASSISTANCE.";
+        let charIndex = 0;
+
+        function typeWriter() {
+            if (charIndex < textToType.length) {
+                textElement.textContent += textToType.charAt(charIndex);
+                charIndex++;
+                // Vitesse de frappe aléatoire pour plus de réalisme
+                setTimeout(typeWriter, Math.random() * 150 + 50);
+            }
+        }
+
+        // Séquence de démarrage (Boot Sequence)
+        window.addEventListener('load', () => {
+            const bootScreen = document.getElementById('boot-sequence');
+            // On laisse la séquence de boot visible 3 secondes
+            setTimeout(() => {
+                bootScreen.style.display = 'none';
+                // On lance l'effet machine à écrire une fois le boot terminé
+                setTimeout(typeWriter, 500);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
